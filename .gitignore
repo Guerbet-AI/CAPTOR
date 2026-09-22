@@ -1,0 +1,19 @@
+# .env file
+.env
+
+# precaution to ignore any data 
+*.json
+*.nii.gz
+*.npy
+*.gz
+*.pkl
+*.xlsx
+*.pt
+*.csv
+*.pth
+*.png
+*.gif
+*.txt
+*.pyc
+._*
+.DS_Store
