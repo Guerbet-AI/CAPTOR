@@ -160,7 +160,7 @@ def eval_model(model, test_loader, logit_scale, regions,
         return eval_loss
     
 
-def train_model(model, train_loader, len_train_dataset, batch_size, nb_epochs, dir_save_model, exp_name, logit_scale, regions, lr = 5e-5, path_load_checkpoint=None, val_loader=None, best_val_loss=1e6, patience=10):
+def train_model(model, train_loader, len_train_dataset, batch_size, nb_epochs, dir_save_model, exp_name, logit_scale, regions, lr = 5e-5, val_loader=None, best_val_loss=1e6, patience=10):
     device = next(model.parameters()).device
 
     path_save_checkpoint = os.path.join(dir_save_model, exp_name)
@@ -172,13 +172,6 @@ def train_model(model, train_loader, len_train_dataset, batch_size, nb_epochs, d
     optimizer = optim.Adam(model.parameters(), lr=lr ,betas=(0.9,0.99)) 
             
     start_epoch = 0
-    if path_load_checkpoint is not None :
-        if 'ckpt' in path_load_checkpoint:
-            start_epoch, global_step = load_checkpoint(path_load_checkpoint, model, optimizer, scheduler=None, scaler=None, map_location="auto")
-        else:
-            model.load_state_dict(torch.load(path_load_checkpoint))
-        print('Weights loaded')
-    model.train()
 
     # torch.cuda.empty_cache()
     loader_dataset = train_loader.dataset

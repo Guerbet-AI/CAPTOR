@@ -80,24 +80,30 @@ if __name__ == "__main__":
     parser.add_argument(
         "--path_clinical_long_former",
         type=str,
-        default="./clinical_longformer",
+        default=None,
         help="Path of initial model weights for text encoder"
     )
 
     parser.add_argument(
         "--path_weights_resnet152",
         type=str,
-        default="./weight_resnet_152.ckpt",
+        default=None,
         help="Path of initial model weights for image encoder"
     )
 
     parser.add_argument(
-        "--path_initial_model_weights",
+        "--weights_dir",
         type=str,
-        default=None,
-        help="Path of initial model weights"
+        default='Guerbet-AI/CAPTOR',
+        help="path of initial weights directory if downloaded locally"
     )
 
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default='CAPTOR_30K',
+        help="CAPTOR_30K or CAPTOR_100K"
+    )
     parser.add_argument(
         "--batch_size",
         type=int,
@@ -136,7 +142,8 @@ if __name__ == "__main__":
              path_dict_std_to_region_to_series_reports=args.path_dict_std_to_region_to_series_reports, 
              path_clinical_long_former=args.path_clinical_long_former,
              path_weights_resnet152=args.path_weights_resnet152,
-             path_initial_model_weights=args.path_initial_model_weights,
+             weights_dir=args.weights_dir,
+             model_type=args.model_type,
              dir_save_inference=args.dir_save_inference,
              cache_dir=args.cache_dir,
              batch_size=args.batch_size,

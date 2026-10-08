@@ -19,7 +19,8 @@ def main(images_dir,
          path_dict_std_to_region_to_series_reports, 
          path_clinical_long_former,
          path_weights_resnet152,
-         path_initial_model_weights,
+         weights_dir,
+         model_type,
          dir_save_inference,
          batch_size,
          cache_dir,
@@ -32,14 +33,22 @@ def main(images_dir,
     images = os.listdir(images_dir)
     inferences = os.listdir(dir_save_inference)        
     
-
-    model = MerlinArchitecture(ImageEmbedding = embedding_2048, path_clinical_long_former=path_clinical_long_former, path_weights_resnet152=path_weights_resnet152)
-    if path_initial_model_weights is not None :
-        if 'ckpt' not in path_initial_model_weights:
-            model.load_state_dict(torch.load(path_initial_model_weights))
-        else:
-            ckpt = torch.load(path_initial_model_weights, map_location="cpu", weights_only=False)
-            model.load_state_dict(ckpt["model_state"])
+    
+    if model_type in ['CAPTOR_30K', 'CAPTOR_100K']:
+        # start from a released checkpoint: no init-weight paths needed
+        model = MerlinArchitecture.from_pretrained(
+            weights_dir,
+            subfolder=model_type,
+            device=device,
+            ImageEmbedding=embedding_2048
+        )
+    else:
+        # from scratch: same as before
+        model = MerlinArchitecture(
+            ImageEmbedding=embedding_2048,
+            path_clinical_long_former=path_clinical_long_former,
+            path_weights_resnet152=path_weights_resnet152,
+        )
     model.to(device)
 
     if regions is None:
@@ -117,23 +126,31 @@ if __name__ == '__main__':
     parser.add_argument(
         "--path_clinical_long_former",
         type=str,
-        default="./clinical_longformer",
+        default=None,
         help="Path of initial model weights for text encoder"
     )
 
     parser.add_argument(
         "--path_weights_resnet152",
         type=str,
-        default="./weight_resnet_152.ckpt",
+        default=None,
         help="Path of initial model weights for image encoder"
     )
 
     parser.add_argument(
-        "--path_initial_model_weights",
+        "--weights_dir",
         type=str,
-        default=None,
-        help="Path of initial model weights"
+        default='Guerbet-AI/CAPTOR',
+        help="path of initial weights directory if downloaded locally"
     )
+
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default='CAPTOR_30K',
+        help="CAPTOR_30K or CAPTOR_100K"
+    )
+
     parser.add_argument(
         "--dir_save_inference",
         type=str,
@@ -163,7 +180,8 @@ if __name__ == '__main__':
          path_dict_std_to_region_to_series_reports=args.path_dict_std_to_region_to_series_reports, 
          path_clinical_long_former=args.path_clinical_long_former,
          path_weights_resnet152=args.path_weights_resnet152,
-         path_initial_model_weights=args.path_initial_model_weights,
+         weights_dir=args.weights_dir,
+         model_type=args.model_type,
          dir_save_inference=args.dir_save_inference,
          cache_dir=args.cache_dir,
          batch_size=args.batch_size,

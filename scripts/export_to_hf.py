@@ -14,7 +14,21 @@ args = p.parse_args()
 model = MerlinArchitecture(ImageEmbedding=False,
                            path_clinical_long_former=args.path_clinical_long_former,
                            path_weights_resnet152=args.path_weights_resnet152)
-ckpt = torch.load(args.checkpoint, map_location="cpu")
+def load_ckpt(path):
+    if '.pt' in path : 
+        try:
+            return torch.load(path, map_location="cpu", weights_only=True)
+        except Exception:
+            print("weights_only=True failed; falling back to weights_only=False (trusted file only)")
+            return torch.load(path, map_location="cpu", weights_only=False)
+    elif '.ckpt' in path:
+        try:
+            return torch.load(path, map_location="cpu", weights_only=True)['model_state']
+        except Exception:
+            print("weights_only=True failed; falling back to weights_only=False (trusted file only)")
+            return torch.load(path, map_location="cpu", weights_only=False)['model_state']
+
+ckpt = load_ckpt(args.checkpoint)
 ckpt = ckpt.get("model_state_dict", ckpt)
 ckpt = {k.removeprefix("module."): v for k, v in ckpt.items()}
 print(model.load_state_dict(ckpt, strict=False))        # inspect missing/unexpected keys

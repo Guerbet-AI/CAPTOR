@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 import pickle
 
-from captor.models.build import MerlinArchitecture
+from captor import MerlinArchitecture
 from captor.data.dataloaders import DataLoader
 
 from captor.utils.utils_train import *
@@ -20,7 +20,8 @@ def main(images_dir,
          train_logit_scale,
          path_clinical_long_former,
          path_weights_resnet152,
-         path_initial_model_weights,
+         weights_dir,
+         model_type,
          cache_dir,
          batch_size,
          epochs,
@@ -33,8 +34,25 @@ def main(images_dir,
     global_dict_crop_centers = pickle.load(open(path_global_dict_crop_centers, "rb"))
     dict_std_to_region_to_series_reports = pickle.load(open(path_dict_std_to_region_to_series_reports, "rb"))
 
-    model = MerlinArchitecture(ImageEmbedding = False, train_logit_scale=train_logit_scale, path_clinical_long_former=path_clinical_long_former, path_weights_resnet152=path_weights_resnet152)
+
+    if model_type in ['CAPTOR_30K', 'CAPTOR_100K']:
+        # start from a released checkpoint: no init-weight paths needed
+        model = MerlinArchitecture.from_pretrained(
+            weights_dir,
+            subfolder=model_type,
+            device=device,
+            train_logit_scale=train_logit_scale,   # config override
+        )
+    else:
+        # from scratch: same as before
+        model = MerlinArchitecture(
+            ImageEmbedding=False,
+            train_logit_scale=train_logit_scale,
+            path_clinical_long_former=path_clinical_long_former,
+            path_weights_resnet152=path_weights_resnet152,
+        )
     model.to(device)
+    model.train()
 
     training_set = [study for study, val in dict_std_to_region_to_series_reports.items() if val['set']=='TRAIN']
     val_set = [study for study, val in dict_std_to_region_to_series_reports.items() if val['set']=='VAL']
@@ -85,7 +103,6 @@ def main(images_dir,
         logit_scale=nn.Parameter(torch.ones([]) * np.log(1 / 0.07)), 
         regions=regions, 
         lr=learning_rate,
-        path_load_checkpoint=path_initial_model_weights,
         val_loader=val_loader, 
         patience=patience
         )
@@ -156,22 +173,29 @@ if __name__ == '__main__':
     parser.add_argument(
         "--path_clinical_long_former",
         type=str,
-        default="./clinical_longformer",
+        default=None,
         help="Path of initial model weights for text encoder"
     )
 
     parser.add_argument(
         "--path_weights_resnet152",
         type=str,
-        default="./weight_resnet_152.ckpt",
+        default=None,
         help="Path of initial model weights for image encoder"
     )
 
     parser.add_argument(
-        "--path_initial_model_weights",
+        "--weights_dir",
         type=str,
-        default=None,
-        help="Path of initial model weights"
+        default='Guerbet-AI/CAPTOR',
+        help="path of initial weights directory if downloaded locally"
+    )
+
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default='CAPTOR_30K',
+        help="CAPTOR_30K or CAPTOR_100K"
     )
     
     parser.add_argument(
@@ -217,7 +241,8 @@ if __name__ == '__main__':
          train_logit_scale=args.train_logit_scale,
          path_clinical_long_former=args.path_clinical_long_former,
          path_weights_resnet152=args.path_weights_resnet152,
-         path_initial_model_weights=args.path_initial_model_weights,
+         weights_dir=args.weights_dir,
+         model_type=args.model_type,
          cache_dir=args.cache_dir,
          batch_size=args.batch_size,
          epochs=args.epochs,
