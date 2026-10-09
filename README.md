@@ -47,7 +47,7 @@ Transform = monai.transforms.Compose(
     ]
 )
 ```
-To use our preprocessing pipeline please see section 4.
+To use our preprocessing pipeline and dataloader please see section 4.
 
 ### Available checkpoints
 
