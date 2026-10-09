@@ -31,14 +31,32 @@ print(model)
 
 That is all you need. The weights, the model configuration and the tokenizer are downloaded automatically from the Hugging Face Hub and cached. **You do not need to download the ResNet-152 or Clinical-Longformer initialization weights**: the released checkpoints already contain every trained parameter.
 
+The input transformation needed is the following :
+```python
+Tranform = monai.transforms.Compose(
+    [
+        LoadImaged(keys=["image"], image_only=False, meta_keys=["image_meta_dict"]),
+        EnsureChannelFirstd(keys=["image"]),
+        Orientationd(keys=["image"], axcodes="RAS", labels=None),
+        Spacingd(keys=["image"], pixdim=(1.5, 1.5, 3), mode=("bilinear")),
+        ScaleIntensityRanged(
+            keys=["image"], a_min=-1000, a_max=1000, b_min=0.0, b_max=1.0, clip=True
+        ),
+        SpatialPadd(keys=["image"], spatial_size=[224, 224, 160]),
+
+    ]
+)
+```
+To use our preprocessing pipeline please see section 4.
+
 ### Available checkpoints
 
 Each checkpoint lives in its own subfolder of the Hugging Face repo [`Guerbet-AI/CAPTOR`](https://huggingface.co/Guerbet-AI/CAPTOR). Only the subfolder you request is downloaded.
 
 | `subfolder` | Description |
 |---|---|
-| `CAPTOR_30K` | _describe: training data size / regions / intended use_ |
-| `CAPTOR_100K` | _describe: training data size / regions / intended use_ |
+| `CAPTOR_30K` | ~30K CT studies from our proprietray dataset |
+| `CAPTOR_100K` | ~100K CT studies from our proprietray dataset and public datasets : Merlin, CT-RATE, INSPECT, BIMCV-R |
 
 ### `from_pretrained` options
 
