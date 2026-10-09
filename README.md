@@ -1,5 +1,7 @@
 # CAPTOR
 
+Paper: CAPTOR: a vision-language foundation model for Chest-Abdomen-Pelvis Oncologic CT
+
 CAPTOR (Chest Abdomen Pelvis foundaTion model for Oncologic Radiology) is a CT medical vision-language model (VLM). Given one or more NIfTI CT studies and its associated reports, the pipeline:
 
 1. Runs **TotalSegmentator** on each CT to locate anatomical regions (thorax, abdomen, pelvis, ...).
