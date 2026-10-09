@@ -33,7 +33,7 @@ That is all you need. The weights, the model configuration and the tokenizer are
 
 The input transformation needed is the following :
 ```python
-Tranform = monai.transforms.Compose(
+Transform = monai.transforms.Compose(
     [
         LoadImaged(keys=["image"], image_only=False, meta_keys=["image_meta_dict"]),
         EnsureChannelFirstd(keys=["image"]),
