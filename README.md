@@ -401,3 +401,16 @@ preprocessing.py  ──► global_dict_crop_centers.pkl (per-region crop center
    │
    └──► inference.py  ──► inference_outputs/ (predictions / embeddings)
 ```
+
+## Citations 
+```bibtex
+@misc{jeanmactoux2026captorvisionlanguagefoundationmodel,
+      title={CAPTOR: a vision-language foundation model for Chest-Abdomen-Pelvis Oncologic CT}, 
+      author={Séléna Jean-Mactoux and Sophie Loizillon and Ghina Jardali and Amandine Crombé and Nathalie Lassau and Alexandre Bône},
+      year={2026},
+      eprint={2610.14226},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2610.14226}, 
+}
+```
