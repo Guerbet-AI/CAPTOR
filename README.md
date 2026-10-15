@@ -4,6 +4,8 @@ Paper: [CAPTOR: a vision-language foundation model for Chest-Abdomen-Pelvis Onco
 
 CAPTOR (Chest Abdomen Pelvis foundaTion model for Oncologic Radiology) is a CT medical vision-language model (VLM) for image feature extraction, suitable for a wide range of downstream tasks : disease detection, survival prediction (both necessitate training of classifiers), retrieval (no further training needed) etc.
 
+Our pipeline uses a segmentation model to compute anatomical crop centers (chest, gastrointestinal tract, liver and biliary tree, pelvic organs etc). This process was used during training to enable the model to process whole Chest-Abdomen-Pelvis CT scans, and can be used in inference to make sure the needed region is seen by the model. 
+
 Given one or more NIfTI CT studies and its associated reports, the pipeline:
 
 1. Runs **TotalSegmentator** on each CT to locate anatomical regions (thorax, abdomen, pelvis, ...).
@@ -14,9 +16,9 @@ The architecture is based on the MERLIN architecture, with a 3D-inflated ResNet-
 
 ---
 
-## Quick start without cloning the repo
+## I. Quick start without cloning the repo and without our preprocessing method
 
-### 1. Install
+### I.1. Install
 
 ```bash
 pip install git+https://github.com/Guerbet-AI/CAPTOR.git
@@ -24,12 +26,17 @@ pip install git+https://github.com/Guerbet-AI/CAPTOR.git
 
 (Replace the URL with the actual GitHub repository URL. With `uv`: `uv add git+https://github.com/Guerbet-AI/CAPTOR.git`.)
 
-### 2. Load a trained model
+### I.2. Load a trained model
 
 ```python
 from captor import MerlinArchitecture
 
-model = MerlinArchitecture.from_pretrained("Guerbet-AI/CAPTOR", subfolder="CAPTOR_30K")
+model = MerlinArchitecture.from_pretrained(
+    "Guerbet-AI/CAPTOR",          # HF repo id OR a local folder (see "Offline use")
+    subfolder="CAPTOR_30K",       # which checkpoint to load
+    device="cuda:0",              # default: "cpu"
+    ImageEmbedding=True,         # default : False (embeddings from the shared image-text space (size 512)), for image feature extract set to True (size 2048)
+    )
 print(model)
 ```
 
@@ -51,7 +58,7 @@ Transform = monai.transforms.Compose(
     ]
 )
 ```
-To use our preprocessing pipeline and dataloader please see section 4.
+To use our preprocessing pipeline and dataloader please see section II.
 
 ### Available checkpoints
 
@@ -76,21 +83,8 @@ model = MerlinArchitecture.from_pretrained(
 Notes:
 
 - The model is returned in **eval mode**. Call `model.train()` if you want to fine-tune it.
-- Extra keyword arguments (e.g. `ImageEmbedding=True`) override the values stored in the checkpoint's `config.json`. Do not change architecture fields such as `nb_channels` unless you know the weights still match.
 
-### Image-only embeddings
-
-To extract image embeddings only (no text input):
-
-```python
-model = MerlinArchitecture.from_pretrained(
-    "Guerbet-AI/CAPTOR", subfolder="CAPTOR_30K", ImageEmbedding=True
-)
-```
-
-In this mode the model may not contain all the heads present in the full checkpoint. If loading complains about unexpected keys, pass `strict=False` and check that the printed `unexpected` list contains only head weights and that `missing` is empty.
-
-### Offline use (no internet on the target machine)
+### I.3 Offline use (no internet on the target machine)
 
 On a machine **with** internet, download only what you need:
 
@@ -126,25 +120,9 @@ If the model is already in your Hugging Face cache, you can also set `HF_HUB_OFF
 
 If you get `HFValidationError: Repo id must be in the form 'repo_name' or 'namespace/repo_name'`, your local path does not exist from the directory you run Python in. Check it with `os.path.isdir(path)`.
 
-### TotalSegmentator
+## II. Using our training/inference pipeline with our anatomical preprocessing
 
-The full pipelines below (not `from_pretrained`) also need TotalSegmentator:
-
-```bash
-pip install TotalSegmentator
-```
-
-If you do not have internet access on the machine you want to run TotalSegmentator on:
-
-1. Install TotalSegmentator (and set up the license) on a machine with internet.
-2. Run TotalSegmentator for one subject on this machine. This downloads the weights and saves them to `~/.totalsegmentator`.
-3. Copy the folder `~/.totalsegmentator` from this machine to the machine without internet.
-
-TotalSegmentator should now also work on the machine without internet.
-
----
-
-## 1. Project layout
+### II.1. Project layout 
 
 ```
 CAPTOR/
@@ -183,7 +161,7 @@ Every script under `scripts/` is documented with its own docstrings/argparse hel
 
 ---
 
-## 2. Environment setup (development / training)
+## II.2. Environment setup (development / training)
 
 If you only want to load the model, `pip install git+https://...` (see Quick start) is enough. To run the full pipelines or train, clone the repository.
 
@@ -207,31 +185,36 @@ source .venv/bin/activate
 
 or simply prefix commands with `uv run`, e.g. `uv run scripts/training_pipeline.py ...`.
 
-### Which weights do you need?
+#### TotalSegmentator
 
-| You want to... | Weights needed |
-|---|---|
-| Run inference / extract embeddings with a released checkpoint | **None to download manually.** `from_pretrained` fetches everything (or use a local folder, see "Offline use") |
-| Fine-tune or use your own `.pt` on the CAPTOR architecture | Released config + tokenizer (via `from_pretrained(..., weights_path=...)`) |
-| Train from scratch | Initialization weights below |
-| Export a new checkpoint to the Hugging Face format | Initialization weights below, plus your trained checkpoint |
+The full pipelines below (not `from_pretrained`) also need TotalSegmentator:
 
-Initialization weights (only for training from scratch or exporting):
+```bash
+pip install TotalSegmentator
+```
 
-| Argument | Purpose |
-|---|---|
-| `--path_clinical_long_former` | Local path to the Clinical-Longformer text encoder weights |
-| `--path_weights_resnet152` | Checkpoint used to initialize the 3D-inflated ResNet-152 image encoder |
+If you do not have internet access on the machine you want to run TotalSegmentator on:
 
-In code, the two ways of building the model are:
+1. Install TotalSegmentator (and set up the license) on a machine with internet.
+2. Run TotalSegmentator for one subject on this machine. This downloads the weights and saves them to `~/.totalsegmentator`.
+3. Copy the folder `~/.totalsegmentator` from this machine to the machine without internet.
+
+TotalSegmentator should now also work on the machine without internet.
+
+#### Loading the model
+---
 
 ```python
 # Trained checkpoint (inference, embeddings, fine-tuning): no init weights needed
-model = MerlinArchitecture.from_pretrained("Guerbet-AI/CAPTOR", subfolder="CAPTOR_30K")
+model = MerlinArchitecture.from_pretrained(
+    "Guerbet-AI/CAPTOR",          # HF repo id OR a local folder (see "Offline use")
+    subfolder="CAPTOR_30K",       # which checkpoint to load
+    device="cuda:0",              # default: "cpu"
+    ImageEmbedding=True,         # default : False (embeddings from the shared image-text space (size 512)), for image feature extract set to True (size 2048)
+    )
 
-# From scratch (training): needs the initialization weights
+# From scratch (training): needs the initialization weights available on HuggingFace
 model = MerlinArchitecture(
-    ImageEmbedding=False,
     path_clinical_long_former="./clinical_longformer",
     path_weights_resnet152="./weight_resnet_152.ckpt",
 )
@@ -239,7 +222,7 @@ model = MerlinArchitecture(
 
 ---
 
-## 3. Expected data layout
+## II.3. Expected data layout
 
 ### CT volumes
 
@@ -289,11 +272,11 @@ The list of regions the model is trained/run on comes from `regions` in `src/cap
 
 ---
 
-## 4. Usage
+## II.4. Usage
 
 Both `training_pipeline.py` and `inference_pipeline.py` chain the same first two stages (TotalSegmentator inference, then preprocessing) before running their respective final stage. Each stage can be skipped with `--do_segmentations False` / `--do_preprocessing False` if its outputs already exist, which is useful for iterating on training/inference without recomputing segmentations every time.
 
-### 4.1 Training
+### II.4.1 Training
 
 ```bash
 uv run scripts/training_pipeline.py \
@@ -313,7 +296,26 @@ uv run scripts/training_pipeline.py \
     --patience 10
 ```
 
-Key arguments (see `training_pipeline.py --help` for the full list):
+### II.4.2 Inference
+
+```bash
+uv run scripts/inference_pipeline.py \
+    --images_dir ./images \
+    --segmentations_dir ./TS_outputs \
+    --path_dict_std_to_region_to_series_reports ./dict_std_to_region_to_series_reports.pkl \
+    --path_global_dict_crop_centers ./global_dict_crop_centers.pkl \
+    --path_clinical_long_former None \
+    --path_weights_resnet152 None \
+    --weights_dir Guerbet-AI/CAPTOR \
+    --model_type CAPTOR_30K \
+    --dir_save_inference ./inference_outputs \
+    --batch_size 18
+```
+
+### II.4.3 Running individual stages
+
+Each of `totalsegmentator_inference.py`, `preprocessing.py`, `train.py`, and `inference.py` can also be run directly (not just through the two pipeline orchestrators) — refer to each script's own `--help` / docstring for its specific arguments. This is useful, for example, to re-run only preprocessing after fixing the crop-center logic, without recomputing segmentations, or to run TotalSegmentator once on a shared dataset that both training and inference will reuse.
+
 
 | Argument | Default | Description |
 |---|---|---|
@@ -338,48 +340,10 @@ Key arguments (see `training_pipeline.py --help` for the full list):
 | `--cache_dir` | `./cache` | Cache directory for dataset caching |
 | `--regions` | `None` (all) | Restrict training to a subset of regions |
 
-### 4.2 Inference
-
-```bash
-uv run scripts/inference_pipeline.py \
-    --images_dir ./images \
-    --segmentations_dir ./TS_outputs \
-    --path_dict_std_to_region_to_series_reports ./dict_std_to_region_to_series_reports.pkl \
-    --path_global_dict_crop_centers ./global_dict_crop_centers.pkl \
-    --path_clinical_long_former None \
-    --path_weights_resnet152 None \
-    --weights_dir Guerbet-AI/CAPTOR \
-    --model_type CAPTOR_30K \
-    --dir_save_inference ./inference_outputs \
-    --batch_size 18
-```
-
-Key arguments (see `inference_pipeline.py --help` for the full list):
-
-| Argument | Default | Description |
-|---|---|---|
-| `--images_dir` | `./images` | NIfTI images folder |
-| `--segmentations_dir` | `./TS_outputs` | Where TotalSegmentator outputs are stored |
-| `--do_segmentations` | `True` | Run TotalSegmentator if not already done |
-| `--do_preprocessing` | `True` | Compute crop centers if not already done |
-| `--workers` | `10` | Parallel workers for preprocessing |
-| `--path_dict_std_to_region_to_series_reports` | `./dict_std_to_region_to_series_reports.pkl` | Study/series/report metadata (see §3) |
-| `--path_global_dict_crop_centers` | `./global_dict_crop_centers.pkl` | Precomputed/output crop centers |
-| `--path_clinical_long_former` | `./clinical_longformer` | Text encoder init weights |
-| `--path_weights_resnet152` | `./weight_resnet_152.ckpt` | Image encoder init weights |
-| `--weights_dir` | `Guerbet-AI/CAPTOR` | Optional full-model weights directory if you have downloaded them, for example './captor_weights/ |
-| `--model_type` | `CAPTOR_30K` | If you want to start from pretrained weights, also accepts 'CAPTOR_100K', if set to anything else the text encoder and image encoder init weights paths will be used |
-| `--dir_save_inference` | `./` | Where inference outputs are saved |
-| `--batch_size` | `18` | Batch size |
-| `--cache_dir` | `./cache` | Cache directory for dataset caching |
-
-### 4.3 Running individual stages
-
-Each of `totalsegmentator_inference.py`, `preprocessing.py`, `train.py`, and `inference.py` can also be run directly (not just through the two pipeline orchestrators) — refer to each script's own `--help` / docstring for its specific arguments. This is useful, for example, to re-run only preprocessing after fixing the crop-center logic, without recomputing segmentations, or to run TotalSegmentator once on a shared dataset that both training and inference will reuse.
 
 ---
 
-## 6. Notes
+## II.6. Notes
 
 - `regions` (imported from `captor.utils.utils_dict`) defines the canonical list of anatomical regions the model is aware of; it drives both what gets cropped in preprocessing and what the model trains/infers on.
 - The `--do_segmentations` / `--do_preprocessing` flags exist so that expensive upstream steps (TotalSegmentator, crop-center computation) aren't repeated unnecessarily across multiple training runs or inference calls on the same dataset.
@@ -387,7 +351,7 @@ Each of `totalsegmentator_inference.py`, `preprocessing.py`, `train.py`, and `in
 
 ---
 
-## 7. Quick reference: pipeline flow
+## II.7. Quick reference: pipeline flow
 
 ```
 images/ (NIfTI)
