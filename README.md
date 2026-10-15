@@ -185,26 +185,6 @@ If you do not have internet access on the machine you want to run TotalSegmentat
 3. Copy the folder `~/.totalsegmentator` from this machine to the machine without internet.
 
 TotalSegmentator should now also work on the machine without internet.
-
-#### Loading the model
----
-
-```python
-# Trained checkpoint (inference, embeddings, fine-tuning): no init weights needed
-model = MerlinArchitecture.from_pretrained(
-    "Guerbet-AI/CAPTOR",          # HF repo id OR a local folder (see "Offline use")
-    subfolder="CAPTOR_30K",       # which checkpoint to load
-    device="cuda:0",              # default: "cpu"
-    ImageEmbedding=True,         # default : False (embeddings from the shared image-text space (size 512)), for image feature extract set to True (size 2048)
-    )
-
-# From scratch (training): needs the initialization weights available on HuggingFace
-model = MerlinArchitecture(
-    path_clinical_long_former="./clinical_longformer",
-    path_weights_resnet152="./weight_resnet_152.ckpt",
-)
-```
-
 ---
 
 ## II.3. Expected data layout
