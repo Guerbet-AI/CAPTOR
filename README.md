@@ -2,7 +2,9 @@
 
 Paper: [CAPTOR: a vision-language foundation model for Chest-Abdomen-Pelvis Oncologic CT](https://arxiv.org/abs/2610.14226)
 
-CAPTOR (Chest Abdomen Pelvis foundaTion model for Oncologic Radiology) is a CT medical vision-language model (VLM). Given one or more NIfTI CT studies and its associated reports, the pipeline:
+CAPTOR (Chest Abdomen Pelvis foundaTion model for Oncologic Radiology) is a CT medical vision-language model (VLM) for image feature extraction, suitable for a wide range of downstream tasks : disease detection, survival prediction (both necessitate training of classifiers), retrieval (no further training needed) etc.
+
+Given one or more NIfTI CT studies and its associated reports, the pipeline:
 
 1. Runs **TotalSegmentator** on each CT to locate anatomical regions (thorax, abdomen, pelvis, ...).
 2. **Preprocesses** the volumes using those segmentations (region cropping / crop-center extraction).
@@ -68,7 +70,6 @@ model = MerlinArchitecture.from_pretrained(
     subfolder="CAPTOR_30K",       # which checkpoint to load
     device="cuda:0",              # default: "cpu"
     ImageEmbedding=False,         # see "Image-only embeddings" below
-    strict=True,                  # set False if your weights do not match exactly
 )
 ```
 
