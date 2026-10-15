@@ -40,8 +40,6 @@ model = MerlinArchitecture.from_pretrained(
 print(model)
 ```
 
-That is all you need. The weights, the model configuration and the tokenizer are downloaded automatically from the Hugging Face Hub and cached. **You do not need to download the ResNet-152 or Clinical-Longformer initialization weights**: the released checkpoints already contain every trained parameter.
-
 The input transformation needed is the following :
 ```python
 Transform = monai.transforms.Compose(
