@@ -39,6 +39,7 @@ model = MerlinArchitecture.from_pretrained(
     )
 print(model)
 ```
+The model is returned in **eval mode**. Call `model.train()` if you want to fine-tune it.
 
 The input transformation needed is the following :
 ```python
@@ -67,20 +68,6 @@ Each checkpoint lives in its own subfolder of the Hugging Face repo [`Guerbet-AI
 | `CAPTOR_30K` | ~30K CT studies from our proprietray dataset |
 | `CAPTOR_100K` | ~100K CT studies from our proprietray dataset and public datasets : Merlin, CT-RATE, INSPECT, BIMCV-R |
 
-### `from_pretrained` options
-
-```python
-model = MerlinArchitecture.from_pretrained(
-    "Guerbet-AI/CAPTOR",          # HF repo id OR a local folder (see "Offline use")
-    subfolder="CAPTOR_30K",       # which checkpoint to load
-    device="cuda:0",              # default: "cpu"
-    ImageEmbedding=False,         # see "Image-only embeddings" below
-)
-```
-
-Notes:
-
-- The model is returned in **eval mode**. Call `model.train()` if you want to fine-tune it.
 
 ### I.3 Offline use (no internet on the target machine)
 
