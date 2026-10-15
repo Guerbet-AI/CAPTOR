@@ -65,8 +65,8 @@ Each checkpoint lives in its own subfolder of the Hugging Face repo [`Guerbet-AI
 
 | `subfolder` | Description |
 |---|---|
-| `CAPTOR_30K` | ~30K CT studies from our proprietray dataset |
-| `CAPTOR_100K` | ~100K CT studies from our proprietray dataset and public datasets : Merlin, CT-RATE, INSPECT, BIMCV-R |
+| `CAPTOR_30K` | trained on ~30K CT studies from our proprietray dataset |
+| `CAPTOR_100K` | trained on ~100K CT studies from our proprietray dataset and public datasets : Merlin, CT-RATE, INSPECT, BIMCV-R |
 
 
 ### I.3 Offline use (no internet on the target machine)
