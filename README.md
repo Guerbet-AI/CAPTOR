@@ -111,16 +111,12 @@ uv run scripts/training_pipeline.py \
     --segmentations_dir ./TS_outputs \
     --path_dict_std_to_region_to_series_reports ./dict_std_to_region_to_series_reports.pkl \
     --path_global_dict_crop_centers ./global_dict_crop_centers.pkl \
-    --path_clinical_long_former None \
-    --path_weights_resnet152 None \
-    --weights_dir Guerbet-AI/CAPTOR \
-    --model_type CAPTOR_30K \
+    --path_clinical_long_former None \ #change if you want to train from resnet152 and clinical longformer init weights. Weights are available on HF
+    --path_weights_resnet152 None \ #change if you want to train from resnet152 and clinical longformer init weights. Weights are available on HF
+    --weights_dir Guerbet-AI/CAPTOR \ #set to None if you want to train from resnet152 and clinical longformer init weights
+    --model_type CAPTOR_30K \ #set to None if you want to train from resnet152 and clinical longformer init weights
     --dir_save_model ./checkpoints \
     --exp_name my_experiment \
-    --epochs 200 \
-    --batch_size 18 \
-    --learning_rate 1.25e-6 \
-    --patience 10
 ```
 
 ### Inference
@@ -136,7 +132,6 @@ uv run scripts/inference_pipeline.py \
     --weights_dir Guerbet-AI/CAPTOR \
     --model_type CAPTOR_30K \
     --dir_save_inference ./inference_outputs \
-    --batch_size 18
 ```
 
 ### Running individual stages
