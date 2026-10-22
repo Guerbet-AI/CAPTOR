@@ -71,7 +71,7 @@ pip install git+https://github.com/Guerbet-AI/CAPTOR.git
 
 - CT studies : **NIfTI files** in a single folder (`--images_dir`, default `./images`).
   
-- Both pipelines need a pickle file to define which image to use for each region : Run and modify as needed the script 'create_dict_std_to_region_to_series_reports.py' to create the needed pickle file (`--path_dict_std_to_region_to_series_reports`, default `./dict_std_to_region_to_series_reports.pkl`). The file has the following structure:
+- Both pipelines need a pickle file to define which image to use for each region : Run and modify as needed the script `create_dict_std_to_region_to_series_reports.py` to create the needed pickle file (`--path_dict_std_to_region_to_series_reports`, default `./dict_std_to_region_to_series_reports.pkl`). The file has the following structure:
 
 ```python
 {
